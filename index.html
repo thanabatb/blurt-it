@@ -1202,17 +1202,22 @@
       return arr;
     }
 
+    // Minimum words a pattern must have to enter the deck, per difficulty
+    const MIN_POOL_SIZE = { easy: 4, medium: 3, hard: 2 };
+
     function buildDeck() {
       // One representative word per unique (first, last, len) pattern per cycle
       const pool = getWordPool();
+      const minSize = MIN_POOL_SIZE[difficulty];
       const byPattern = new Map();
       for (const w of pool) {
         const key = w[0] + w[w.length - 1] + w.length;
         if (!byPattern.has(key)) byPattern.set(key, []);
         byPattern.get(key).push(w);
       }
-      // Pick a random word from each pattern group, then shuffle the pattern list
-      deck = shuffle([...byPattern.values()].map(words => words[Math.floor(Math.random() * words.length)]));
+      // Drop thin patterns, then pick a random word per group and shuffle
+      const richPatterns = [...byPattern.values()].filter(words => words.length >= minSize);
+      deck = shuffle(richPatterns.map(words => words[Math.floor(Math.random() * words.length)]));
       deckIndex = 0;
     }
 
