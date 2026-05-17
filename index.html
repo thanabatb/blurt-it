@@ -53,6 +53,64 @@
     }
     #start-screen .btn-start { margin-top: 1.75rem; }
 
+    /* ── Hide-answer toggle ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: #1a1a28;
+      border: 1px solid #2a2a3e;
+      border-radius: 12px;
+    }
+    .setting-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      text-align: left;
+    }
+    .setting-label span {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #ccc;
+    }
+    .setting-label small {
+      font-size: 0.72rem;
+      color: #555;
+    }
+
+    /* pill toggle */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 99px;
+      background: #2e2e46;
+      transition: background 200ms;
+      cursor: pointer;
+    }
+    .toggle input:checked + .toggle-track { background: #6c63ff; }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 200ms;
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
     /* ── Difficulty selector ── */
     .diff-label {
       margin-top: 2rem;
@@ -383,6 +441,18 @@
       <button class="diff-btn hard" onclick="setDifficulty('hard')">Hard</button>
     </div>
     <p id="diff-info"></p>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <span>Hide answers by default</span>
+        <small>Host reveals when the group is ready</small>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="hide-answers-toggle" onchange="hideByDefault = this.checked" />
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+
     <button class="btn-primary btn-start" onclick="startGame()">Start Game</button>
   </div>
 
@@ -1073,6 +1143,7 @@
     let currentWord = '';
     let currentPattern = null;
     let difficulty = 'easy';
+    let hideByDefault = false;
 
     const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6, 7, 8, 9] };
     const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4+ blanks' };
@@ -1211,11 +1282,17 @@
         container.appendChild(chip);
       }
 
-      // Start blurred — host reveals when ready
-      container.classList.add('blurred');
+      // Apply blur based on pre-game setting; reveal button always available as override
       const revealBtn = document.getElementById('modal-reveal-btn');
-      revealBtn.textContent = '👁 Reveal Answer';
-      revealBtn.classList.remove('revealed');
+      if (hideByDefault) {
+        container.classList.add('blurred');
+        revealBtn.textContent = '👁 Reveal Answer';
+        revealBtn.classList.remove('revealed');
+      } else {
+        container.classList.remove('blurred');
+        revealBtn.textContent = '🙈 Hide Answer';
+        revealBtn.classList.add('revealed');
+      }
 
       // Show overflow gradient + hint after render
       requestAnimationFrame(() => {
