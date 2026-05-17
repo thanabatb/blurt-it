@@ -43,7 +43,60 @@
       max-width: 340px;
       line-height: 1.5;
     }
-    #start-screen .btn-start { margin-top: 2.5rem; }
+    #start-screen .btn-start { margin-top: 1.75rem; }
+
+    /* ── Difficulty selector ── */
+    .diff-label {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+    }
+
+    .diff-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 0.6rem;
+    }
+
+    .diff-btn {
+      padding: 0.5rem 1.2rem;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 2px solid #2a2a3e;
+      background: #1a1a28;
+      color: #555;
+      transition: border-color 150ms, color 150ms, background 150ms;
+    }
+    .diff-btn:hover { color: #aaa; border-color: #444; }
+    .diff-btn.active { border-color: #6c63ff; background: #211f3a; color: #c8c4ff; }
+    .diff-btn.active.medium { border-color: #f0a840; background: #2a2010; color: #f0c060; }
+    .diff-btn.active.hard   { border-color: #ff6060; background: #2a1010; color: #ff9090; }
+
+    #diff-info {
+      font-size: 0.82rem;
+      color: #666;
+      margin-top: 0.55rem;
+      min-height: 1.2em;
+      transition: opacity 150ms;
+    }
+
+    /* Difficulty badge shown in-round */
+    #diff-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.7rem;
+      border-radius: 99px;
+      border: 1px solid;
+    }
+    #diff-badge.easy   { color: #9490cc; border-color: #3a3660; }
+    #diff-badge.medium { color: #c09030; border-color: #5a4010; }
+    #diff-badge.hard   { color: #cc6060; border-color: #601010; }
 
     /* ── Buttons ── */
     button {
@@ -245,12 +298,20 @@
   <div id="start-screen" class="screen active">
     <h1>Blurt It!</h1>
     <p class="tagline">First and last letter are shown. Race out loud to name words that fit.</p>
+    <p class="diff-label">Difficulty</p>
+    <div class="diff-group">
+      <button class="diff-btn easy active" onclick="setDifficulty('easy')">Easy</button>
+      <button class="diff-btn medium" onclick="setDifficulty('medium')">Medium</button>
+      <button class="diff-btn hard" onclick="setDifficulty('hard')">Hard</button>
+    </div>
+    <p id="diff-info"></p>
     <button class="btn-primary btn-start" onclick="startGame()">Start Game</button>
   </div>
 
   <!-- Round Screen -->
   <div id="round-screen" class="screen">
     <div id="pattern-wrap">
+      <div id="diff-badge"></div>
       <div id="cells"></div>
       <div id="word-length"></div>
       <div id="hint-pill"></div>
@@ -346,12 +407,38 @@
     let recentPatterns = [];
     let currentWord = '';
     let currentPattern = null;
+    let difficulty = 'easy';
+
+    const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6, 7, 8, 9] };
+    const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4+ blanks' };
+    const DIFF_INFO    = {
+      easy:   '2 blanks shown → 4-letter words (e.g. B _ _ K)',
+      medium: '3 blanks shown → 5-letter words (e.g. B _ _ _ K)',
+      hard:   '4+ blanks → 6–9 letter words (e.g. B _ _ _ _ K)',
+    };
+
+    function getWordPool() {
+      const lengths = DIFF_LENGTHS[difficulty];
+      return SEED_WORDS.filter(w => lengths.includes(w.length));
+    }
+
+    function setDifficulty(d) {
+      difficulty = d;
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.classList.contains(d));
+      });
+      document.getElementById('diff-info').textContent = DIFF_INFO[d];
+    }
+
+    // Show info for default difficulty on load
+    setDifficulty('easy');
 
     function pickPattern() {
+      const pool = getWordPool();
       let word, pattern;
       let attempts = 0;
       do {
-        word = SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)];
+        word = pool[Math.floor(Math.random() * pool.length)];
         pattern = { first: word[0], last: word[word.length - 1], len: word.length };
         attempts++;
       } while (
@@ -483,6 +570,10 @@
     }
 
     function startGame() {
+      const badge = document.getElementById('diff-badge');
+      badge.textContent = DIFF_LABELS[difficulty];
+      badge.className = difficulty;
+
       document.getElementById('start-screen').classList.remove('active');
       document.getElementById('round-screen').classList.add('active');
       const pattern = pickPattern();
