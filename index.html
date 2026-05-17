@@ -1173,7 +1173,7 @@
 
     function getWordPool() {
       const lengths = DIFF_LENGTHS[difficulty];
-      return SEED_WORDS.filter(w => lengths.includes(w.length));
+      return SEED_WORDS.filter(w => lengths.includes(w.length) && !w.endsWith('s'));
     }
 
     function setDifficulty(d) {
