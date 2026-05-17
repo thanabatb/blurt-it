@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blurt It!</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f13;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 560px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .screen.active { display: flex; }
+
+    /* ── Start Screen ── */
+    #start-screen h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+    #start-screen .tagline {
+      margin-top: 0.75rem;
+      font-size: 1.1rem;
+      color: #888;
+      max-width: 340px;
+      line-height: 1.5;
+    }
+    #start-screen .btn-start { margin-top: 2.5rem; }
+
+    /* ── Buttons ── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.9rem 2.2rem;
+      transition: transform 80ms, opacity 120ms;
+    }
+    button:active { transform: scale(0.96); }
+
+    .btn-primary { background: #6c63ff; color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-next {
+      background: #1e1e2a;
+      color: #c8c4ff;
+      border: 2px solid #3a3660;
+      font-size: 1rem;
+      padding: 0.75rem 1.75rem;
+    }
+    .btn-next:hover { border-color: #6c63ff; color: #fff; }
+
+    .btn-finish {
+      background: none;
+      color: #444;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+    .btn-finish:hover { color: #ff6b6b; border-color: #3a1a1a; background: #1a0f0f; }
+
+    /* ── Round Screen ── */
+    #round-screen { gap: 2.5rem; }
+
+    /* Pattern */
+    #pattern-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+
+    #cells {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .cell {
+      width: 52px;
+      height: 64px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .cell.known { background: #6c63ff; color: #fff; }
+    .cell.blank { background: #1e1e2a; color: #444; border: 2px solid #2e2e3e; }
+
+    #word-length {
+      font-size: 0.85rem;
+      color: #666;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    #hint-pill {
+      display: inline-block;
+      background: #1a1a28;
+      border: 1px solid #2e2e4a;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      color: #7a78aa;
+      padding: 0.25rem 0.85rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* Timer */
+    #timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%; }
+
+    #clock {
+      font-size: 3.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      color: #fff;
+      transition: color 300ms;
+    }
+    #clock.low { color: #ff4d4d; }
+
+    #progress-track {
+      width: 100%;
+      height: 8px;
+      background: #1e1e2a;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      border-radius: 99px;
+      background: #6c63ff;
+      width: 100%;
+      transition: width 0.9s linear, background 300ms;
+    }
+    #progress-bar.low { background: #ff4d4d; }
+
+    /* ── Reveal Modal ── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+      z-index: 100;
+    }
+    #modal-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #modal {
+      background: #16161f;
+      border: 1px solid #2a2a3e;
+      border-radius: 20px;
+      padding: 2rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      max-width: 480px;
+      width: 100%;
+      transform: translateY(12px);
+      transition: transform 220ms ease;
+    }
+    #modal-overlay.visible #modal { transform: translateY(0); }
+
+    #modal-eyebrow {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #6c63ff;
+    }
+    #modal-eyebrow.timeout { color: #ff4d4d; }
+
+    #modal-meta {
+      font-size: 0.82rem;
+      color: #555;
+      letter-spacing: 0.03em;
+    }
+    #modal-meta span { color: #7a78aa; font-weight: 600; }
+
+    #modal-words {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      justify-content: center;
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 0.25rem 0;
+    }
+
+    .word-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3em 0.65em;
+      border-radius: 8px;
+      background: #1e1e2e;
+      border: 1px solid #2e2e46;
+      color: #9490cc;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      transition: background 150ms;
+    }
+
+    .word-chip.current {
+      background: #3a2e00;
+      border-color: #c09000;
+      color: #f0c040;
+    }
+
+    #modal-btn { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Start Screen -->
+  <div id="start-screen" class="screen active">
+    <h1>Blurt It!</h1>
+    <p class="tagline">First and last letter are shown. Race out loud to name words that fit.</p>
+    <button class="btn-primary btn-start" onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- Round Screen -->
+  <div id="round-screen" class="screen">
+    <div id="pattern-wrap">
+      <div id="cells"></div>
+      <div id="word-length"></div>
+      <div id="hint-pill"></div>
+    </div>
+
+    <div id="timer-wrap">
+      <div id="clock">1:00</div>
+      <div id="progress-track">
+        <div id="progress-bar"></div>
+      </div>
+    </div>
+
+    <button class="btn-next" onclick="onNextWordClick()">Next Word →</button>
+    <button class="btn-finish" onclick="finishGame()">Finish Game</button>
+  </div>
+
+  <!-- Reveal Modal -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <div id="modal-eyebrow"></div>
+      <div id="modal-meta"></div>
+      <div id="modal-words"></div>
+      <button class="btn-primary" id="modal-btn" onclick="doNextRound()">Next Word →</button>
+    </div>
+  </div>
+
+  <script>
+    const ROUND_SECONDS = 60;
+
+    const SEED_WORDS = [
+      "able","acid","aged","also","area","army","away","baby","back","ball",
+      "band","bank","base","bath","bear","beat","been","bell","best","bill",
+      "bird","blow","blue","boat","body","bomb","bond","bone","book","bore",
+      "born","boss","both","burn","bush","busy","cake","call","calm",
+      "came","camp","card","care","cart","case","cash","cast","cave","cent",
+      "chat","chip","city","clam","clap","clay","clip","club","coal","coat",
+      "code","coil","cold","come","cool","copy","core","corn","cost","coup",
+      "crab","crop","cure","curl","cute","dark","data","date","dawn","dead",
+      "deal","dear","debt","deck","deep","deny","desk","dial","diet","dirt",
+      "dish","disk","done","door","dose","down","drag","draw","drew","drop",
+      "drum","dual","dull","dump","dust","duty","each","earn","ease","edge",
+      "else","emit","even","ever","evil","exam","face","fact","fail","fair",
+      "fall","fame","fast","fate","fear","feel","feet","fell","felt","file",
+      "fill","film","find","fire","firm","fish","fist","flag","flat","flew",
+      "flow","foam","fold","folk","fond","food","fool","foot","ford","fore",
+      "fork","form","fort","foul","free","from","fuel","full","fund","fuse",
+      "gain","game","gate","gave","gear","gift","give","glad","glow","glue",
+      "goal","goes","gold","golf","gone","good","grab","gray","grew","grin",
+      "grip","grow","gulf","gust","hack","hair","half","hall","halt","hand",
+      "hang","hard","harm","hate","have","head","heal","heap","heat","heel",
+      "held","help","here","hero","hide","high","hill","hint","hire","hold",
+      "hole","holy","home","hook","hope","horn","hour","hull","hunt","hurt",
+      "idea","idle","into","iron","item","join","joke","jump","just","keen",
+      "keep","kept","kill","kind","king","knot","know","lack","laid","land",
+      "lane","large","last","late","lawn","lead","lean","leap","left","lend",
+      "lens","lets","liar","lift","like","lime","line","link","list","live",
+      "load","loan","lock","loft","long","look","loop","lord","lose","loss",
+      "loud","love","luck","lung","made","mail","main","make","male","mall",
+      "malt","mark","mass","mate","meal","mean","meet","melt","menu","mere",
+      "mild","mile","milk","mill","mind","mine","mint","miss","mist","mode",
+      "mood","moon","more","most","move","much","mule","must","nail","name",
+      "navy","need","nest","next","nice","nine","node","none","noon","norm",
+      "note","noun","nude","null","oath","obey","once","only","open","oral",
+      "over","pace","pack","page","paid","pain","pair","park","part","pass",
+      "past","path","peak","peer","pick","pile","pine","pipe","plan","play",
+      "plea","plot","plow","plug","plus","pole","poll","pond","pool","poor",
+      "port","pose","post","pour","prey","prod","pull","pump","pure","push",
+      "quit","race","rage","raid","rail","rain","raise","rake","rank","rate",
+      "read","real","rear","rely","rent","rest","rice","rich","ride","ring",
+      "riot","rise","risk","road","roam","roar","role","roll","roof","room",
+      "root","rope","rose","ruin","rule","rush","safe","said","sail","sake",
+      "salt","same","sand","sane","save","scan","seal","seam","seat","seed",
+      "seem","sell","send","sent","shed","ship","shop","shot","show","shut",
+      "side","sigh","sign","silk","sing","sink","site","size","skin","skip",
+      "slam","slap","slim","slip","slot","slow","snap","snow","soak","soap",
+      "sock","soil","sold","sole","some","song","sort","soul","span","spin",
+      "spit","spot","star","stay","stem","step","stir","stop","strap","straw",
+      "such","suit","sung","sunk","sure","swap","swim","tail","take","tale",
+      "tall","tank","tape","task","team","tear","tell","tend","tent","term",
+      "test","text","than","that","them","then","they","thin","this","thus",
+      "tide","till","time","tire","toad","told","toll","tomb","tone","tool",
+      "tore","torn","tour","town","trap","tree","trim","trip","true","tube",
+      "tune","turn","twin","type","ugly","unit","upon","used","user","vary",
+      "vast","very","view","void","vote","wade","wage","wait","wake","walk",
+      "wall","want","ward","warm","warn","warp","wary","wash","wave","weak",
+      "wear","weed","well","went","were","west","when","wide","wild","will",
+      "wind","wine","wing","wipe","wire","wise","wish","with","woke","wolf",
+      "worm","wore","worn","wrap","yard","year","yell","your","zero","zone"
+    ].filter(w => w.length >= 4 && w.length <= 9);
+
+    let timeLeft = 0;
+    let ticker = null;
+    let recentPatterns = [];
+    let currentWord = '';
+    let currentPattern = null;
+
+    function pickPattern() {
+      let word, pattern;
+      let attempts = 0;
+      do {
+        word = SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)];
+        pattern = { first: word[0], last: word[word.length - 1], len: word.length };
+        attempts++;
+      } while (
+        attempts < 20 &&
+        recentPatterns.some(p => p.first === pattern.first && p.last === pattern.last && p.len === pattern.len)
+      );
+
+      recentPatterns.push(pattern);
+      if (recentPatterns.length > 5) recentPatterns.shift();
+      currentWord = word;
+      currentPattern = pattern;
+      return pattern;
+    }
+
+    function countPossible(pattern) {
+      return SEED_WORDS.filter(w =>
+        w[0] === pattern.first &&
+        w[w.length - 1] === pattern.last &&
+        w.length === pattern.len
+      ).length;
+    }
+
+    function renderPattern(pattern) {
+      const cells = document.getElementById('cells');
+      cells.innerHTML = '';
+
+      for (let i = 0; i < pattern.len; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (i === 0) {
+          cell.textContent = pattern.first;
+          cell.classList.add('known');
+        } else if (i === pattern.len - 1) {
+          cell.textContent = pattern.last;
+          cell.classList.add('known');
+        } else {
+          cell.textContent = '?';
+          cell.classList.add('blank');
+        }
+        cells.appendChild(cell);
+      }
+
+      document.getElementById('word-length').textContent = `${pattern.len} letters`;
+
+      const count = countPossible(pattern);
+      document.getElementById('hint-pill').textContent =
+        count === 1 ? '1 possible word in pool' : `${count} possible words in pool`;
+    }
+
+    function startTimer() {
+      clearInterval(ticker);
+      timeLeft = ROUND_SECONDS;
+      updateTimerDisplay();
+      ticker = setInterval(tick, 1000);
+    }
+
+    function tick() {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(ticker);
+        showModal(true);
+      }
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      const clock = document.getElementById('clock');
+      const bar = document.getElementById('progress-bar');
+
+      clock.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+      clock.classList.toggle('low', timeLeft <= 10);
+
+      bar.style.width = `${(timeLeft / ROUND_SECONDS) * 100}%`;
+      bar.classList.toggle('low', timeLeft <= 10);
+    }
+
+    // Font size inversely scaled by word length: 4 letters → biggest, 9 → smallest
+    const CHIP_SIZES = { 4: '1.55rem', 5: '1.3rem', 6: '1.1rem', 7: '0.97rem', 8: '0.87rem', 9: '0.78rem' };
+    const CHIP_WEIGHTS = { 4: 800, 5: 800, 6: 700, 7: 700, 8: 600, 9: 600 };
+
+    function showModal(isTimeout) {
+      const eyebrow = document.getElementById('modal-eyebrow');
+      eyebrow.textContent = isTimeout ? "Time's up!" : 'Next word';
+      eyebrow.className = isTimeout ? 'timeout' : '';
+
+      const matches = SEED_WORDS.filter(w =>
+        w[0] === currentPattern.first &&
+        w[w.length - 1] === currentPattern.last &&
+        w.length === currentPattern.len
+      ).sort((a, b) => a.localeCompare(b));
+
+      const meta = document.getElementById('modal-meta');
+      meta.innerHTML = `<span>${matches.length}</span> ${matches.length === 1 ? 'word' : 'words'} match this pattern — gold one was picked`;
+
+      const container = document.getElementById('modal-words');
+      container.innerHTML = '';
+      for (const word of matches) {
+        const chip = document.createElement('div');
+        chip.className = 'word-chip' + (word === currentWord ? ' current' : '');
+        chip.textContent = word;
+        chip.style.fontSize = CHIP_SIZES[word.length] || '0.9rem';
+        chip.style.fontWeight = CHIP_WEIGHTS[word.length] || 600;
+        container.appendChild(chip);
+      }
+
+      document.getElementById('modal-overlay').classList.add('visible');
+    }
+
+    function doNextRound() {
+      document.getElementById('modal-overlay').classList.remove('visible');
+      const pattern = pickPattern();
+      renderPattern(pattern);
+      startTimer();
+    }
+
+    function onNextWordClick() {
+      clearInterval(ticker);
+      showModal(false);
+    }
+
+    function finishGame() {
+      clearInterval(ticker);
+      document.getElementById('modal-overlay').classList.remove('visible');
+      document.getElementById('round-screen').classList.remove('active');
+      document.getElementById('start-screen').classList.add('active');
+      recentPatterns = [];
+    }
+
+    function startGame() {
+      document.getElementById('start-screen').classList.remove('active');
+      document.getElementById('round-screen').classList.add('active');
+      const pattern = pickPattern();
+      renderPattern(pattern);
+      startTimer();
+    }
+  </script>
+</body>
+</html>
