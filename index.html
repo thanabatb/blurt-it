@@ -1156,11 +1156,12 @@
 
     let timeLeft = 0;
     let ticker = null;
-    let recentPatterns = [];
     let currentWord = '';
     let currentPattern = null;
     let difficulty = 'easy';
     let hideByDefault = false;
+    let deck = [];
+    let deckIndex = 0;
 
     const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6, 7, 8, 9] };
     const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4+ blanks' };
@@ -1193,21 +1194,32 @@
     // Show info for default difficulty on load
     setDifficulty('easy');
 
-    function pickPattern() {
-      const pool = getWordPool();
-      let word, pattern;
-      let attempts = 0;
-      do {
-        word = pool[Math.floor(Math.random() * pool.length)];
-        pattern = { first: word[0], last: word[word.length - 1], len: word.length };
-        attempts++;
-      } while (
-        attempts < 20 &&
-        recentPatterns.some(p => p.first === pattern.first && p.last === pattern.last && p.len === pattern.len)
-      );
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
 
-      recentPatterns.push(pattern);
-      if (recentPatterns.length > 5) recentPatterns.shift();
+    function buildDeck() {
+      // One representative word per unique (first, last, len) pattern per cycle
+      const pool = getWordPool();
+      const byPattern = new Map();
+      for (const w of pool) {
+        const key = w[0] + w[w.length - 1] + w.length;
+        if (!byPattern.has(key)) byPattern.set(key, []);
+        byPattern.get(key).push(w);
+      }
+      // Pick a random word from each pattern group, then shuffle the pattern list
+      deck = shuffle([...byPattern.values()].map(words => words[Math.floor(Math.random() * words.length)]));
+      deckIndex = 0;
+    }
+
+    function pickPattern() {
+      if (deckIndex >= deck.length) buildDeck();
+      const word = deck[deckIndex++];
+      const pattern = { first: word[0], last: word[word.length - 1], len: word.length };
       currentWord = word;
       currentPattern = pattern;
       return pattern;
@@ -1358,7 +1370,8 @@
       document.getElementById('modal-overlay').classList.remove('visible');
       document.getElementById('round-screen').classList.remove('active');
       document.getElementById('start-screen').classList.add('active');
-      recentPatterns = [];
+      deck = [];
+      deckIndex = 0;
     }
 
     function startGame() {
@@ -1368,6 +1381,7 @@
 
       document.getElementById('start-screen').classList.remove('active');
       document.getElementById('round-screen').classList.add('active');
+      buildDeck();
       const pattern = pickPattern();
       renderPattern(pattern);
       startTimer();
