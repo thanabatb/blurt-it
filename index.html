@@ -53,6 +53,26 @@
     }
     #start-screen .btn-start { margin-top: 1.75rem; }
 
+    /* ── Timer selector ── */
+    .timer-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 0.6rem;
+    }
+    .timer-btn {
+      padding: 0.45rem 0.9rem;
+      border-radius: 99px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border: 2px solid #2a2a3e;
+      background: #1a1a28;
+      color: #555;
+      cursor: pointer;
+      transition: border-color 150ms, color 150ms, background 150ms;
+    }
+    .timer-btn:hover { color: #aaa; border-color: #444; }
+    .timer-btn.active { border-color: #6c63ff; background: #211f3a; color: #c8c4ff; }
+
     /* ── Hide-answer toggle ── */
     .setting-row {
       display: flex;
@@ -442,6 +462,14 @@
     </div>
     <p id="diff-info"></p>
 
+    <p class="diff-label" style="margin-top:1.75rem">Timer</p>
+    <div class="timer-group">
+      <button class="timer-btn active" data-secs="60" onclick="setTimer(60)">1 min</button>
+      <button class="timer-btn" data-secs="30" onclick="setTimer(30)">30 sec</button>
+      <button class="timer-btn" data-secs="20" onclick="setTimer(20)">20 sec</button>
+      <button class="timer-btn" data-secs="10" onclick="setTimer(10)">10 sec</button>
+    </div>
+
     <div class="setting-row">
       <div class="setting-label">
         <span>Hide answers by default</span>
@@ -491,7 +519,7 @@
   </div>
 
   <script>
-    const ROUND_SECONDS = 60;
+    let roundSeconds = 60;
 
     const SEED_WORDS = [
       "able","acid","acne","acre","acts","adds","aged","ages","aids","aims",
@@ -1166,6 +1194,13 @@
       document.getElementById('diff-info').textContent = DIFF_INFO[d];
     }
 
+    function setTimer(s) {
+      roundSeconds = s;
+      document.querySelectorAll('.timer-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.secs) === s);
+      });
+    }
+
     // Show info for default difficulty on load
     setDifficulty('easy');
 
@@ -1226,7 +1261,7 @@
 
     function startTimer() {
       clearInterval(ticker);
-      timeLeft = ROUND_SECONDS;
+      timeLeft = roundSeconds;
       updateTimerDisplay();
       ticker = setInterval(tick, 1000);
     }
@@ -1249,7 +1284,7 @@
       clock.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
       clock.classList.toggle('low', timeLeft <= 10);
 
-      bar.style.width = `${(timeLeft / ROUND_SECONDS) * 100}%`;
+      bar.style.width = `${(timeLeft / roundSeconds) * 100}%`;
       bar.classList.toggle('low', timeLeft <= 10);
     }
 
