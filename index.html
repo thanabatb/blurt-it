@@ -395,30 +395,19 @@
       align-items: center;
       padding: 0.3em 0.65em;
       border-radius: 8px;
-      background: #1e1e2e;
-      border: 1px solid #2e2e46;
-      color: #9490cc;
+      background: #3a2e00;
+      border: 1px solid #c09000;
+      color: #f0c040;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       line-height: 1;
       transition: background 150ms, border-color 150ms, color 150ms, filter 300ms;
     }
 
-    .word-chip.current {
-      background: #3a2e00;
-      border-color: #c09000;
-      color: #f0c040;
-    }
-
-    /* Blurred state — hides answer and gold highlight */
+    /* Blurred state — hides all chips equally */
     #modal-words.blurred .word-chip {
       filter: blur(7px);
       user-select: none;
-    }
-    #modal-words.blurred .word-chip.current {
-      background: #1e1e2e;
-      border-color: #2e2e46;
-      color: #9490cc;
     }
 
     .btn-reveal {
