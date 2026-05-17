@@ -315,7 +315,7 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       line-height: 1;
-      transition: background 150ms;
+      transition: background 150ms, border-color 150ms, color 150ms, filter 300ms;
     }
 
     .word-chip.current {
@@ -324,7 +324,41 @@
       color: #f0c040;
     }
 
-    #modal-btn { margin-top: 0.5rem; }
+    /* Blurred state — hides answer and gold highlight */
+    #modal-words.blurred .word-chip {
+      filter: blur(7px);
+      user-select: none;
+    }
+    #modal-words.blurred .word-chip.current {
+      background: #1e1e2e;
+      border-color: #2e2e46;
+      color: #9490cc;
+    }
+
+    .btn-reveal {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #1e1e2e;
+      color: #c8c4ff;
+      border: 2px solid #3a3660;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      transition: border-color 150ms, color 150ms, background 150ms, transform 80ms;
+    }
+    .btn-reveal:hover { border-color: #6c63ff; color: #fff; }
+    .btn-reveal:active { transform: scale(0.96); }
+    .btn-reveal.revealed {
+      background: #16160e;
+      border-color: #5a4800;
+      color: #c09030;
+    }
+    .btn-reveal.revealed:hover { border-color: #c09000; color: #f0c040; }
+
+    #modal-btn { margin-top: 0.25rem; }
   </style>
 </head>
 <body>
@@ -372,6 +406,7 @@
         <div id="modal-words"></div>
       </div>
       <p id="modal-scroll-hint">↓ scroll to see more</p>
+      <button class="btn-reveal" id="modal-reveal-btn" onclick="toggleReveal()">👁 Reveal Answer</button>
       <button class="btn-primary" id="modal-btn" onclick="doNextRound()">Next Word →</button>
     </div>
   </div>
@@ -1154,7 +1189,7 @@
       ).sort((a, b) => a.localeCompare(b));
 
       const meta = document.getElementById('modal-meta');
-      meta.innerHTML = `<span>${matches.length}</span> ${matches.length === 1 ? 'word' : 'words'} match this pattern — gold one was picked`;
+      meta.innerHTML = `<span>${matches.length}</span> ${matches.length === 1 ? 'word' : 'words'} match this pattern`;
 
       const container = document.getElementById('modal-words');
       container.innerHTML = '';
@@ -1167,6 +1202,12 @@
         container.appendChild(chip);
       }
 
+      // Start blurred — host reveals when ready
+      container.classList.add('blurred');
+      const revealBtn = document.getElementById('modal-reveal-btn');
+      revealBtn.textContent = '👁 Reveal Answer';
+      revealBtn.classList.remove('revealed');
+
       // Show overflow gradient + hint after render
       requestAnimationFrame(() => {
         const wrap = document.getElementById('modal-words-wrap');
@@ -1175,6 +1216,19 @@
       });
 
       document.getElementById('modal-overlay').classList.add('visible');
+    }
+
+    function toggleReveal() {
+      const container = document.getElementById('modal-words');
+      const btn = document.getElementById('modal-reveal-btn');
+      const isBlurred = container.classList.toggle('blurred');
+      if (isBlurred) {
+        btn.textContent = '👁 Reveal Answer';
+        btn.classList.remove('revealed');
+      } else {
+        btn.textContent = '🙈 Hide Answer';
+        btn.classList.add('revealed');
+      }
     }
 
     function doNextRound() {
