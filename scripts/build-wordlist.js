@@ -59,11 +59,23 @@ async function main() {
   const freqWords = toWords(await get(FREQ_URL));
   process.stderr.write(`  ${freqWords.length.toLocaleString()} words loaded\n`);
 
+  // Words that are primarily proper nouns (names, brands) even though they
+  // technically appear in both ENABLE (as obscure common words) and Google 10k
+  // (as frequently-seen names). They would confuse players expecting common words.
+  const BLOCKED = new Set([
+    'alan','anna','john','jose','juan','marc','omar','otto','vera','walt',
+    'jake','jana','jean','joel','jose','josh','kate','kent','kurt','kyle',
+    'lane','lars','leon','lena','lora','lori','luis','marc','mario','mike',
+    'noel','norm','noah','neil','nick','phil','rick','rita','robb','rolf',
+    'rosa','ross','ryan','sara','sean','seth','stan','tara','theo','tina',
+    'todd','tony','troy','vera','wade','zach',
+  ]);
+
   // Keep words that pass all three filters.
   // freqWords is already frequency-ordered; preserve that order so the
   // most common words appear first (useful if you want to slice later).
   const filtered = freqWords.filter(
-    w => w.length >= MIN_LEN && w.length <= MAX_LEN && enableSet.has(w)
+    w => w.length >= MIN_LEN && w.length <= MAX_LEN && enableSet.has(w) && !BLOCKED.has(w)
   );
 
   process.stderr.write(`\nResult: ${filtered.length} everyday words (${MIN_LEN}–${MAX_LEN} letters)\n`);
