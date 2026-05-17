@@ -39,7 +39,15 @@
     #start-screen .tagline {
       margin-top: 0.75rem;
       font-size: 1.1rem;
-      color: #888;
+      color: #ccc;
+      max-width: 360px;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+    #start-screen .sub-tagline {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #666;
       max-width: 340px;
       line-height: 1.5;
     }
@@ -366,7 +374,8 @@
   <!-- Start Screen -->
   <div id="start-screen" class="screen active">
     <h1>Blurt It!</h1>
-    <p class="tagline">First and last letter are shown. Race out loud to name words that fit.</p>
+    <p class="tagline">A word race for friends, family, and anyone up for a shout.</p>
+    <p class="sub-tagline">Spot the pattern. Blurt the word. No typing — just your voice.</p>
     <p class="diff-label">Difficulty</p>
     <div class="diff-group">
       <button class="diff-btn easy active" onclick="setDifficulty('easy')">Easy</button>
