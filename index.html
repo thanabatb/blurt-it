@@ -223,23 +223,25 @@
     #round-screen { gap: 1.75rem; }
 
     /* Pattern */
-    #pattern-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    #pattern-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%; }
 
     #cells {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: clamp(5px, 2vw, 12px);
+      flex-wrap: nowrap;
       justify-content: center;
+      width: 100%;
     }
 
     .cell {
-      width: 62px;
-      height: 76px;
+      flex: 0 0 auto;
+      width: var(--cell-size, 62px);
+      height: calc(var(--cell-size, 62px) * 1.22);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.1rem;
+      font-size: calc(var(--cell-size, 62px) * 0.52);
       font-weight: 800;
       text-transform: uppercase;
     }
@@ -461,11 +463,11 @@
 
     <div class="setting-row">
       <div class="setting-label">
-        <span>Hide answers by default</span>
-        <small>Host reveals when the group is ready</small>
+        <span>Show answer by default</span>
+        <small>Turn off so host reveals when the group is ready</small>
       </div>
       <label class="toggle">
-        <input type="checkbox" id="hide-answers-toggle" onchange="hideByDefault = this.checked" />
+        <input type="checkbox" id="hide-answers-toggle" checked onchange="showByDefault = this.checked" />
         <div class="toggle-track"></div>
       </label>
     </div>
@@ -1159,16 +1161,16 @@
     let currentWord = '';
     let currentPattern = null;
     let difficulty = 'easy';
-    let hideByDefault = false;
+    let showByDefault = true;
     let deck = [];
     let deckIndex = 0;
 
-    const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6, 7, 8, 9] };
-    const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4+ blanks' };
+    const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6] };
+    const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4 blanks' };
     const DIFF_INFO    = {
       easy:   '2 blanks shown → 4-letter words (e.g. B _ _ K)',
       medium: '3 blanks shown → 5-letter words (e.g. B _ _ _ K)',
-      hard:   '4+ blanks → 6–9 letter words (e.g. B _ _ _ _ K)',
+      hard:   '4 blanks shown → 6-letter words (e.g. B _ _ _ _ K)',
     };
 
     function getWordPool() {
@@ -1241,6 +1243,12 @@
     function renderPattern(pattern) {
       const cells = document.getElementById('cells');
       cells.innerHTML = '';
+
+      // Compute tile size so all cells fit on one row at any screen width
+      const availableWidth = cells.offsetWidth;
+      const gap = Math.min(12, availableWidth * 0.02);
+      const cellSize = Math.min(62, Math.floor((availableWidth - gap * (pattern.len - 1)) / pattern.len));
+      cells.style.setProperty('--cell-size', cellSize + 'px');
 
       for (let i = 0; i < pattern.len; i++) {
         const cell = document.createElement('div');
@@ -1325,14 +1333,14 @@
 
       // Apply blur based on pre-game setting; reveal button always available as override
       const revealBtn = document.getElementById('modal-reveal-btn');
-      if (hideByDefault) {
-        container.classList.add('blurred');
-        revealBtn.textContent = '👁 Reveal Answer';
-        revealBtn.classList.remove('revealed');
-      } else {
+      if (showByDefault) {
         container.classList.remove('blurred');
         revealBtn.textContent = '🙈 Hide Answer';
         revealBtn.classList.add('revealed');
+      } else {
+        container.classList.add('blurred');
+        revealBtn.textContent = '👁 Reveal Answer';
+        revealBtn.classList.remove('revealed');
       }
 
       // Show overflow gradient + hint after render
