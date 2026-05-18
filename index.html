@@ -227,19 +227,21 @@
 
     #cells {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: clamp(5px, 2vw, 12px);
+      flex-wrap: nowrap;
       justify-content: center;
+      width: 100%;
     }
 
     .cell {
-      width: 62px;
-      height: 76px;
+      flex: 0 0 auto;
+      width: var(--cell-size, 62px);
+      height: calc(var(--cell-size, 62px) * 1.22);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.1rem;
+      font-size: calc(var(--cell-size, 62px) * 0.52);
       font-weight: 800;
       text-transform: uppercase;
     }
@@ -1241,6 +1243,12 @@
     function renderPattern(pattern) {
       const cells = document.getElementById('cells');
       cells.innerHTML = '';
+
+      // Compute tile size so all cells fit on one row at any screen width
+      const availableWidth = cells.parentElement.offsetWidth - 32;
+      const gap = Math.min(12, availableWidth * 0.02);
+      const cellSize = Math.min(62, Math.floor((availableWidth - gap * (pattern.len - 1)) / pattern.len));
+      cells.style.setProperty('--cell-size', cellSize + 'px');
 
       for (let i = 0; i < pattern.len; i++) {
         const cell = document.createElement('div');
