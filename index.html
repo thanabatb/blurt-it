@@ -1165,12 +1165,12 @@
     let deck = [];
     let deckIndex = 0;
 
-    const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6, 7, 8, 9] };
-    const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4+ blanks' };
+    const DIFF_LENGTHS = { easy: [4], medium: [5], hard: [6] };
+    const DIFF_LABELS  = { easy: 'Easy · 2 blanks', medium: 'Medium · 3 blanks', hard: 'Hard · 4 blanks' };
     const DIFF_INFO    = {
       easy:   '2 blanks shown → 4-letter words (e.g. B _ _ K)',
       medium: '3 blanks shown → 5-letter words (e.g. B _ _ _ K)',
-      hard:   '4+ blanks → 6–9 letter words (e.g. B _ _ _ _ K)',
+      hard:   '4 blanks shown → 6-letter words (e.g. B _ _ _ _ K)',
     };
 
     function getWordPool() {
