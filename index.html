@@ -466,7 +466,7 @@
         <small>Turn off so host reveals when the group is ready</small>
       </div>
       <label class="toggle">
-        <input type="checkbox" id="hide-answers-toggle" checked onchange="showByDefault = this.checked" />
+        <input type="checkbox" id="hide-answers-toggle" onchange="showByDefault = this.checked" />
         <div class="toggle-track"></div>
       </label>
     </div>
@@ -1160,7 +1160,7 @@
     let currentWord = '';
     let currentPattern = null;
     let difficulty = 'easy';
-    let showByDefault = true;
+    let showByDefault = false;
     let deck = [];
     let deckIndex = 0;
 
